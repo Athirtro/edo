@@ -208,13 +208,45 @@ Con los valores del bloque 2: $c=1{,}375\times10^{-4}$ años⁻¹, $r_{\rm crit}
 
 **Comparación de umbrales.** El umbral dinámico ($r=r_{\rm crit}$) y el convencional ($W=f_{\rm desert}W_0$) responden preguntas distintas. El primero decide *si existe* un estado no desértico; el segundo decide *cuándo se cruza* una convención de aridificación. En el conjunto base $W^* < f_{\rm desert}W_0$: el sistema se dirige hacia un equilibrio de persistencia, pero éste está por debajo del umbral convencional, así que el tiempo de cruce se alcanzará antes de estabilizarse. La prueba `test_threshold_comparison` verifica esta relación.
 
+## Bloque 4 — Tiempo de colapso
+
+Se define formalmente el evento de desierto como el primer instante en que
+
+$$W(t) \le W_{\rm event} \equiv f_{\rm desert}\,W_0 \approx 1{,}815\times10^8\ {\rm km^3},$$
+
+y $t_{\rm colap}$ es ese instante. Se estima de dos formas independientes:
+
+1. **Cuadratura (aproximación cuasi-estacionaria).** Si se supone $G\approx(\eta\mu/\delta)T$, entonces $\alpha T+\beta G=D\,T$ con $D=\alpha+\beta\eta\mu/\delta$, y el sistema se reduce a una EDO separable:
+
+$$\dot W = -A(W)\,(W_{\rm tot}-W),\qquad
+A(W)=\frac{\alpha g(W)-\mu(\alpha-\beta\eta)-\eta\mu(\beta-\alpha\xi)}{D}.$$
+
+Integrando en $u=\ln(W_{\rm tot}-W)$ (necesario porque $W_{\rm tot}-W(0)=\alpha m_{\rm trucha}$ es de orden $10^{-11}$ km³ y una malla uniforme en $W$ sería inútil):
+
+$$t_{\rm colap}^{\rm quad}=\int_{\ln(\alpha m_{\rm trucha})}^{\ln(W_{\rm tot}-W_{\rm event})}\frac{du}{A(W_{\rm tot}-e^u)}.$$
+
+2. **Simulación numérica.** Se integra $S=W_{\rm tot}-W=\alpha T+\beta G$ en lugar de $W$, porque $S(0)=\alpha m_{\rm trucha}\approx5\times10^{-11}$ km³ es 20 órdenes menor que $W_0$; medir el error sobre $W$ ignoraría la cantidad que realmente crece. Se usa RK4 con control adaptativo por duplicación de paso y extrapolación de Richardson (factor $1/15$). El evento se localiza por **bisección con el mismo operador extrapolado que se acepta** dentro del paso que cruza el umbral, de modo que $t_{\rm colap}$ no depende de dónde caiga el cruce dentro de ese paso (sí depende del error de truncamiento del paso). Se monitoriza $W+\alpha T+\beta G$, que RK4 conserva salvo redondeo porque es combinación lineal de las EDO.
+
+Con los parámetros base:
+
+| Método | $t_{\rm colap}$ (años) |
+| --- | ---: |
+| Cuadratura cuasi-estacionaria ($N=2000$) | $4366{,}0309$ |
+| RK4 adaptativo (${\rm tol}=10^{-6}$) | $4024{,}2793$ |
+| RK4 de paso fijo $h=0{,}001$ (referencia) | $4024{,}2782$ |
+
+La diferencia relativa entre la cuadratura y la simulación es de $8{,}49\,\%$, lo que valida la aproximación cuasi-estacionaria como estimación analítica. Al reducir la tolerancia de $10^{-6}$ a $10^{-7}$, $t_{\rm colap}$ cambia en $9{,}4\times10^{-4}$ años; el error máximo de conservación es $\sim5\times10^{-16}$ (relativo).
+
+**Conjetura inicial.** La hipótesis de 8 000 años no se sostiene con este conjunto de parámetros: el modelo da $\approx4{,}0\times10^3$ años, del mismo orden de magnitud pero aproximadamente la mitad. Dado que todos los parámetros biológicos son supuestos libres, el resultado es condicional; el bloque 5 cuantificará cuáles lo dominan.
+
 ## Cómo ejecutar las pruebas
 
 ```bash
-make test
+make test       # todas las pruebas
+make reference  # RK4 de paso fijo h=0.001, referencia independiente de t_colap
 ```
 
-Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c` y `artifacts/test_equilibria.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
+Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c`, `artifacts/test_equilibria.c` y `artifacts/test_collapse.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
 
 | Prueba | Propiedad que especifica |
 | --- | --- |
@@ -237,12 +269,19 @@ Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifa
 | `test_jacobian_finite_differences` | jacobiano analítico vs. diferencias finitas |
 | `test_stability_classes` | desierto silla, persistencia estable |
 | `test_threshold_comparison` | umbral dinámico vs. convencional |
+| `test_event_definition` | evento $W=f_{\rm desert}W_0$ |
+| `test_quadrature` | la cuadratura reproduce la referencia Simpson ($4366{,}0309$) |
+| `test_numerical_collapse` | $t_{\rm colap}$ vs. RK4 fijo, estado en el umbral y conservación |
+| `test_agreement_between_methods` | cuadratura vs. RK4 (diferencia < 10 %) |
+| `test_tolerance_convergence` | reducir `tol` ×10 cambia $t_{\rm colap}$ menos de 0,005 años y mejora la referencia |
+| `test_event_operator_consistency` | el cruce se localiza con el operador aceptado, incluso cerca del final de un paso |
+| `test_no_collapse_when_desert_is_stable` | sin colapso si el desierto es estable |
 
 ## Estado y siguientes bloques
 
 - [x] Bloque 1 — Formulación del modelo (unidades, EDO, condiciones iniciales, invariancia y reducción).
 - [x] Bloque 2 — Datos y parámetros (fuentes citadas, umbral convencional y tabla de parámetros).
 - [x] Bloque 3 — Equilibrios, linealización y umbrales de bifurcación.
-- [ ] Bloque 4 — Tiempo de colapso.
+- [x] Bloque 4 — Tiempo de colapso (cuadratura + integración RK4 con evento).
 - [ ] Bloque 5 — Sensibilidad.
 - [ ] Bloque 6 — Visualización y entrega.
