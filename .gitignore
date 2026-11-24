@@ -1,2 +1,3 @@
 artifacts/test_model
+artifacts/test_parameters
 *.o

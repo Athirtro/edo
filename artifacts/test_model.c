@@ -38,6 +38,7 @@ static Params sample_params(void)
     p.xi = 0.3;             /* t trucha / t gusano */
     p.W0 = 1.3e9;           /* km³ */
     p.m_trucha = 0.05;      /* toneladas (una trucha de 50 kg) */
+    p.f_desert = 0.02 / 0.15; /* convención del bloque 2 */
     return p;
 }
 

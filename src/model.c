@@ -19,7 +19,8 @@ int params_valid(const Params *p)
 {
     if (p->r <= 0.0 || p->K <= 0.0 || p->mu <= 0.0 || p->delta <= 0.0 ||
         p->alpha <= 0.0 || p->beta <= 0.0 || p->eta <= 0.0 ||
-        p->xi <= 0.0 || p->W0 <= 0.0 || p->m_trucha <= 0.0) {
+        p->xi <= 0.0 || p->W0 <= 0.0 || p->m_trucha <= 0.0 ||
+        p->f_desert <= 0.0 || p->f_desert >= 1.0) {
         return 0;
     }
     /* Evita que el campo empuje W por debajo de cero en las transiciones. */

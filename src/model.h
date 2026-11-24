@@ -19,6 +19,7 @@ typedef struct {
     double xi;       /* rendimiento trucha/gusano, t/t */
     double W0;       /* agua liquida inicial, km^3 */
     double m_trucha; /* masa de una trucha, t */
+    double f_desert; /* fraccion umbral de W0, adimensional */
 } Params;
 
 typedef struct {
