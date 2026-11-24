@@ -146,7 +146,7 @@ La convención adoptada es:
 
 $$f_{\rm desert} = \frac{\theta_{\rm Sahara}}{\theta_{\rm ref}} = \frac{0{,}02}{0{,}15} \approx 0{,}133.$$
 
-Es decir, se declara el desierto cuando $W < f_{\rm desert} W_0 \approx 1{,}81\times10^8$ km³: el agua restante, *en relación con la inicial*, es comparable a la humedad del Sahara *en relación con un suelo húmedo de referencia*. **No es un cálculo de volumen global literal**: una Tierra totalmente seca sería más árida que el Sahara, por lo que este umbral es una convención deliberadamente anticipada. Su rango exploratorio es $[0{,}05,\,0{,}25]$.
+Es decir, se declara el desierto cuando $W < f_{\rm desert} W_0 \approx 1{,}815\times10^8$ km³: el agua restante, *en relación con la inicial*, es comparable a la humedad del Sahara *en relación con un suelo húmedo de referencia*. **No es un cálculo de volumen global literal**: una Tierra totalmente seca sería más árida que el Sahara, por lo que este umbral es una convención deliberadamente anticipada. Su rango exploratorio es $[0{,}05,\,0{,}25]$.
 
 ### Tabla de parámetros
 
@@ -178,13 +178,43 @@ Los rangos de $\eta$ y $\xi$ respetan las restricciones del bloque 1, $\eta \le 
 
 La extracción detallada de las cifras está en `docs/fuentes.md`.
 
+## Bloque 3 — Análisis cualitativo
+
+Trabajamos sobre el sistema reducido $(T,G)$, con $W = W_{\rm tot}-\alpha T-\beta G$. Escribiendo $c=\mu(1-\xi\eta)$, los equilibrios son:
+
+- **Desierto:** $(T,G)=(0,0)$, con $W=W_{\rm tot}$. Existe siempre.
+- **Persistencia:** si $c>0$ y $r>c$, se requiere $g(W^*)=c$, de donde
+
+$$W^* = \frac{Kc}{r-c},\qquad
+T^* = \frac{W_{\rm tot}-W^*}{\alpha+\beta\eta\mu/\delta},\qquad
+G^* = \frac{\eta\mu}{\delta}T^*.$$
+
+La rama existe sólo si $W^*<W_{\rm tot}$. El valor crítico en que colisiona con el desierto es
+
+$$r_{\rm crit} = c\left(1+\frac{K}{W_{\rm tot}}\right).$$
+
+Es una **bifurcación de transcrítica**: para $r<r_{\rm crit}$ el desierto es el único equilibrio; para $r>r_{\rm crit}$ aparece el estado de persistencia.
+
+El jacobiano reducido, con $g'(W)=rK/(K+W)^2$, es
+
+$$J(T,G) = \begin{pmatrix}
+g(W)-\mu-\alpha T g'(W) & -\beta T g'(W)+\xi\delta\\
+\eta\mu & -\delta
+\end{pmatrix}.$$
+
+En el desierto, $\det J = -\delta\,[g(W_{\rm tot})-c]$: con los parámetros base $g(W_{\rm tot})\approx0{,}58\,r \gg c$, luego el desierto es **silla** (invasible por una sola trucha). En la persistencia, traza negativa y determinante positivo: es un **nodo estable**.
+
+Con los valores del bloque 2: $c=1{,}375\times10^{-4}$ años⁻¹, $r_{\rm crit}\approx2{,}3848\times10^{-4}$ años⁻¹, $W^*\approx6{,}92\times10^{6}$ km³ y $f_{\rm desert}W_0\approx1{,}815\times10^{8}$ km³.
+
+**Comparación de umbrales.** El umbral dinámico ($r=r_{\rm crit}$) y el convencional ($W=f_{\rm desert}W_0$) responden preguntas distintas. El primero decide *si existe* un estado no desértico; el segundo decide *cuándo se cruza* una convención de aridificación. En el conjunto base $W^* < f_{\rm desert}W_0$: el sistema se dirige hacia un equilibrio de persistencia, pero éste está por debajo del umbral convencional, así que el tiempo de cruce se alcanzará antes de estabilizarse. La prueba `test_threshold_comparison` verifica esta relación.
+
 ## Cómo ejecutar las pruebas
 
 ```bash
 make test
 ```
 
-Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c` y `artifacts/test_parameters.c`; no usan bibliotecas externas. El flujo fue **TDD** en ambos bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
+Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c` y `artifacts/test_equilibria.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
 
 | Prueba | Propiedad que especifica |
 | --- | --- |
@@ -201,10 +231,18 @@ Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c` y `artif
 | `test_threshold_convention` | $f_{\rm desert}=\theta_{\rm Sahara}/\theta_{\rm ref}$ |
 | `test_assumptions_registered` | supuestos marcados como tales; $\mu=1/4000$ |
 | `test_defaults` | `params_default` alimenta al modelo y cumple la invariancia |
+| `test_desert_equilibrium` | el desierto existe con $W=W_{\rm tot}$ y residuos nulos |
+| `test_persistence_equilibrium` | $g(W^*)=c$, $G^*=\eta\mu T^*/\delta$, conservación |
+| `test_bifurcation_threshold` | $r_{\rm crit}$ y existencia de la rama a cada lado |
+| `test_jacobian_finite_differences` | jacobiano analítico vs. diferencias finitas |
+| `test_stability_classes` | desierto silla, persistencia estable |
+| `test_threshold_comparison` | umbral dinámico vs. convencional |
 
 ## Estado y siguientes bloques
 
 - [x] Bloque 1 — Formulación del modelo (unidades, EDO, condiciones iniciales, invariancia y reducción).
 - [x] Bloque 2 — Datos y parámetros (fuentes citadas, umbral convencional y tabla de parámetros).
-- [ ] Bloque 3 — Equilibrios, linealización y umbrales de bifurcación.
-- [ ] Bloques restantes — Tiempo de colapso, sensibilidad, visualización e informe, según `plan-trucha-arena.md`.
+- [x] Bloque 3 — Equilibrios, linealización y umbrales de bifurcación.
+- [ ] Bloque 4 — Tiempo de colapso.
+- [ ] Bloque 5 — Sensibilidad.
+- [ ] Bloque 6 — Visualización y entrega.
