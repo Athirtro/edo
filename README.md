@@ -301,14 +301,29 @@ T'=T/\lambda,\quad G'=G/\lambda$$
 
 deja $W$ invariante y hace covariantes las EDO de biomasa ($\dot T'=\dot T/\lambda$, $\dot G'=\dot G/\lambda$). Por tanto $W(t)$ y $t_{\rm colap}$ son idénticos, aunque $T$ y $G$ estén escalados. Para $\lambda\in\{0{,}25,0{,}5,2,5\}$, el código da $4024{,}279253$ años en todos los casos; si se escalan $\alpha,\beta$ **sin** reescalar la biomasa, $t_{\rm colap}=3962{,}929$ años. Conclusión: $\alpha,\beta$ y $m_{\rm trucha}$ no son identificables por separado a partir de $t_{\rm colap}$ sin una escala externa de biomasa, y $m_{\rm trucha}$ es precisamente uno de los supuestos del bloque 2.
 
+## Bloque 6 — Visualización y entrega
+
+Las figuras se generan en SVG con C puro (`src/svg.c` y `src/visualization.c`), sin Python, gnuplot ni matplotlib. `make figures` ejecuta `artifacts/generate_figures.c` y escribe:
+
+| Figura | Contenido |
+| --- | --- |
+| `figures/series.svg` | $W(t)$, $T(t)$ y $G(t)$ normalizadas, con línea vertical en $t_{\rm colap}\approx4024$ años. |
+| `figures/retrato_fase.svg` | trayectoria en $(T,G)$, desierto, persistencia y separatriz operativa $W=W_{\rm event}$. |
+| `figures/heatmap.svg` | estimación por cuadratura cuasi-estacionaria de $t_{\rm colap}$ frente a $r\in[0{,}002,0{,}05]$ y $K\in[10^8,1{,}4\times10^9]$, en escala logarítmica de color. |
+
+**Advertencia sobre la separatriz.** El desierto es silla, pero su autovector estable tiene $G<0$: la variedad estable sale del cuadrante físico y no hay frontera de cuenca interna. La línea dibujada es la frontera *operativa* del evento $W=W_{\rm event}$, no una frontera de cuenca dinámica. Véase `docs/informe.md`.
+
+Los entregables narrativos son `docs/informe.md` (modelo, parámetros, resultados, sensibilidad, limitaciones y respuesta condicional) y `docs/exposicion.md` (guion de 8–10 min centrado en las tres figuras). Los tres SVG son texto versionable y se regeneran de forma determinista.
+
 ## Cómo ejecutar las pruebas
 
 ```bash
-make test       # todas las pruebas
+make test       # todas las pruebas (regenera las figuras)
 make reference  # RK4 de paso fijo h=0.001, referencia independiente de t_colap
+make figures    # solo regenera figures/*.svg
 ```
 
-Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c`, `artifacts/test_equilibria.c`, `artifacts/test_collapse.c` y `artifacts/test_sensitivity.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
+Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c`, `artifacts/test_equilibria.c`, `artifacts/test_collapse.c`, `artifacts/test_sensitivity.c` y `artifacts/test_visualization.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
 
 | Prueba | Propiedad que especifica |
 | --- | --- |
@@ -344,6 +359,11 @@ Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifa
 | `test_morris_determinism` | misma semilla reproduce el cribado; otra semilla lo cambia |
 | `test_derivative_limits` | paso cero, parámetro desconocido y recorte a rangos |
 | `test_conservation_nonidentifiability` | simetría $\alpha,\beta,m$ para varios $\lambda$ y control roto |
+| `test_series` | serie con cientos de muestras, condición inicial, evento y conservación |
+| `test_phase_portrait` | equilibrios, trayectoria, separatriz en el cuadrante físico y SVG válido |
+| `test_heatmap` | rejilla 20×20 finita, monótona en $r$ y $K$, y SVG válido |
+| `test_null_inputs` | los *builders* rechazan punteros nulos sin fallar |
+| `test_deliverables` | README, informe y exposición presentes y con el contenido esperado |
 
 ## Estado y siguientes bloques
 
@@ -352,4 +372,4 @@ Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifa
 - [x] Bloque 3 — Equilibrios, linealización y umbrales de bifurcación.
 - [x] Bloque 4 — Tiempo de colapso (cuadratura + integración RK4 con evento).
 - [x] Bloque 5 — Sensibilidad (local, Morris y no identificabilidad).
-- [ ] Bloque 6 — Visualización y entrega.
+- [x] Bloque 6 — Visualización y entrega (series, retrato de fase, mapa de calor, informe y exposición).
