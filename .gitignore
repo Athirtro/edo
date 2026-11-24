@@ -3,4 +3,5 @@ artifacts/test_parameters
 artifacts/test_equilibria
 artifacts/test_collapse
 artifacts/reference_rk4
+artifacts/test_sensitivity
 *.o

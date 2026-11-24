@@ -239,6 +239,68 @@ La diferencia relativa entre la cuadratura y la simulación es de $8{,}49\,\%$, 
 
 **Conjetura inicial.** La hipótesis de 8 000 años no se sostiene con este conjunto de parámetros: el modelo da $\approx4{,}0\times10^3$ años, del mismo orden de magnitud pero aproximadamente la mitad. Dado que todos los parámetros biológicos son supuestos libres, el resultado es condicional; el bloque 5 cuantificará cuáles lo dominan.
 
+## Bloque 5 — Sensibilidad
+
+Se analizan ocho de los **nueve** parámetros marcados como supuestos en la tabla del bloque 2: $r,K,\mu,\delta,\alpha,\beta,\eta,\xi$. El noveno, $m_{\rm trucha}$, se fija como escala de biomasa por la no identificabilidad que se demuestra al final de este bloque. $W_0$ y $A$ son datos con fuente, y $f_{\rm desert}$ es una convención que *define el evento*; por eso no entra en el ranking dinámico (su rango exploratorio $[0{,}05,0{,}25]$ ya se documentó en el bloque 2).
+
+### Rangos de variación
+
+| Parámetro | Base | Rango |
+| --- | ---: | --- |
+| $r$ (años⁻¹) | $0{,}02$ | $[0{,}001,\,0{,}2]$ |
+| $K$ (km³) | $10^{9}$ | $[10^{8},\,1{,}4\times10^{9}]$ |
+| $\mu$ (años⁻¹) | $2{,}5\times10^{-4}$ | $[10^{-4},\,10^{-3}]$ |
+| $\delta$ (años⁻¹) | $2\times10^{-3}$ | $[2\times10^{-4},\,10^{-2}]$ |
+| $\alpha$ (km³/t) | $10^{-9}$ | $[10^{-10},\,10^{-8}]$ |
+| $\beta$ (km³/t) | $5\times10^{-10}$ | $[5\times10^{-11},\,5\times10^{-9}]$ |
+| $\eta$ (t/t) | $1{,}5$ | $[0{,}5,\,2]$ |
+| $\xi$ (t/t) | $0{,}3$ | $[0{,}05,\,0{,}5]$ |
+
+Los extremos se toman directamente de `PARAMETERS` en `src/parameters.c`. Las muestras globales que violan $\beta\ge\alpha\xi$ o $\alpha\ge\beta\eta$ se rechazan.
+
+### Sensibilidad local
+
+Derivadas centrales de $t_{\rm colap}$ con paso del 1 % del valor base, y elasticidades $E_p=(p/t_{\rm colap})\,\partial t_{\rm colap}/\partial p$:
+
+| Parámetro | $\partial t_{\rm colap}/\partial p$ | $E_p$ |
+| --- | ---: | ---: |
+| $r$ | $-2{,}052\times10^{5}$ | $-1{,}020$ |
+| $K$ | $1{,}782\times10^{-6}$ | $+0{,}443$ |
+| $\mu$ | $3{,}338\times10^{5}$ | $+0{,}0207$ |
+| $\delta$ | $-2{,}401\times10^{3}$ | $-0{,}00119$ |
+| $\alpha$ | $-8{,}599\times10^{10}$ | $-0{,}0214$ |
+| $\beta$ | $-5{,}056\times10^{9}$ | $-0{,}000628$ |
+| $\eta$ | $-5{,}860$ | $-0{,}00218$ |
+| $\xi$ | $-20{,}87$ | $-0{,}00156$ |
+
+La elasticidad de $r$ es $-1{,}020$: duplicar la tasa máxima de crecimiento reduce $t_{\rm colap}$ aproximadamente a la mitad. $K$ va en sentido opuesto ($+0{,}443$): más agua necesaria para saturar retrasa el colapso. Las restantes elasticidades son una orden de magnitud menores.
+
+### Sensibilidad global (Morris)
+
+Cribado de 100 trayectorias de dos niveles, semilla `12345`, paso $\Delta=1/4$ en el parámetro normalizado. $\mu^*=\langle|{\rm EE}|\rangle$ y $\sigma$ son la media absoluta y la desviación de los efectos elementales, en años por recorrido completo del rango. Si una muestra no colapsa antes de 20 000 años, se censura $t_{\rm colap}$ a ese valor. `n` es el número de efectos válidos: las muestras que violan las restricciones de invariancia se descartan, por lo que los últimos puestos dependen de ese submuestreo.
+
+| Parámetro | $\mu^*$ (años) | $\sigma$ (años) | $n$ |
+| --- | ---: | ---: | ---: |
+| $r$ | 8559 | 16884 | 100 |
+| $K$ | 1202 | 2286 | 100 |
+| $\mu$ | 172 | 806 | 100 |
+| $\alpha$ | 58,5 | 110 | 89 |
+| $\xi$ | 51,6 | 191 | 99 |
+| $\eta$ | 15,4 | 79,8 | 97 |
+| $\delta$ | 5,34 | 20,7 | 100 |
+| $\beta$ | 2,65 | 9,73 | 84 |
+
+El ranking confirma que $r$ y $K$ dominan, seguidos de $\mu$. Las desviaciones grandes frente a $\mu^*$ indican fuerte no linealidad e interacción: este cribado **rankea**, pero no descompone la varianza como haría Sobol.
+
+### No identificabilidad por conservación
+
+La conservación $W_{\rm tot}=W+\alpha T+\beta G$ induce una simetría exacta. Para $\lambda\in[0{,}25,\,5]$ (intersección de los rangos de $m_{\rm trucha},\alpha,\beta$):
+
+$$\alpha'=\lambda\alpha,\quad \beta'=\lambda\beta,\quad m'_{\rm trucha}=m_{\rm trucha}/\lambda,\quad
+T'=T/\lambda,\quad G'=G/\lambda$$
+
+deja $W$ invariante y hace covariantes las EDO de biomasa ($\dot T'=\dot T/\lambda$, $\dot G'=\dot G/\lambda$). Por tanto $W(t)$ y $t_{\rm colap}$ son idénticos, aunque $T$ y $G$ estén escalados. Para $\lambda\in\{0{,}25,0{,}5,2,5\}$, el código da $4024{,}279253$ años en todos los casos; si se escalan $\alpha,\beta$ **sin** reescalar la biomasa, $t_{\rm colap}=3962{,}929$ años. Conclusión: $\alpha,\beta$ y $m_{\rm trucha}$ no son identificables por separado a partir de $t_{\rm colap}$ sin una escala externa de biomasa, y $m_{\rm trucha}$ es precisamente uno de los supuestos del bloque 2.
+
 ## Cómo ejecutar las pruebas
 
 ```bash
@@ -246,7 +308,7 @@ make test       # todas las pruebas
 make reference  # RK4 de paso fijo h=0.001, referencia independiente de t_colap
 ```
 
-Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c`, `artifacts/test_equilibria.c` y `artifacts/test_collapse.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
+Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifacts/test_parameters.c`, `artifacts/test_equilibria.c`, `artifacts/test_collapse.c` y `artifacts/test_sensitivity.c`; no usan bibliotecas externas. El flujo fue **TDD** en todos los bloques: primero se escribieron las pruebas y se comprobó que fallaban por ausencia del módulo correspondiente (fase roja), y después se implementó hasta hacerlas pasar (fase verde).
 
 | Prueba | Propiedad que especifica |
 | --- | --- |
@@ -276,6 +338,12 @@ Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifa
 | `test_tolerance_convergence` | reducir `tol` ×10 cambia $t_{\rm colap}$ menos de 0,005 años y mejora la referencia |
 | `test_event_operator_consistency` | el cruce se localiza con el operador aceptado, incluso cerca del final de un paso |
 | `test_no_collapse_when_desert_is_stable` | sin colapso si el desierto es estable |
+| `test_free_parameter_table` | ocho supuestos con rango de la tabla y set/get correctos |
+| `test_local_derivative` | derivada vs. diferencia externa, signo y ranking $r>K>\mu$ |
+| `test_morris_screening` | efectos finitos y ranking global $r,K,\mu$ |
+| `test_morris_determinism` | misma semilla reproduce el cribado; otra semilla lo cambia |
+| `test_derivative_limits` | paso cero, parámetro desconocido y recorte a rangos |
+| `test_conservation_nonidentifiability` | simetría $\alpha,\beta,m$ para varios $\lambda$ y control roto |
 
 ## Estado y siguientes bloques
 
@@ -283,5 +351,5 @@ Requiere `gcc` y `make`. Los arneses están en `artifacts/test_model.c`, `artifa
 - [x] Bloque 2 — Datos y parámetros (fuentes citadas, umbral convencional y tabla de parámetros).
 - [x] Bloque 3 — Equilibrios, linealización y umbrales de bifurcación.
 - [x] Bloque 4 — Tiempo de colapso (cuadratura + integración RK4 con evento).
-- [ ] Bloque 5 — Sensibilidad.
+- [x] Bloque 5 — Sensibilidad (local, Morris y no identificabilidad).
 - [ ] Bloque 6 — Visualización y entrega.
